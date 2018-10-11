@@ -1,5 +1,6 @@
 package com.apap.tutorial5.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,20 +27,38 @@ public class FlightController {
 	
 	@RequestMapping(value = "/flight/add/{licenseNumber}", method = RequestMethod.GET)
 	private String add(@PathVariable(value = "licenseNumber") String licenseNumber, Model model) {
-		FlightModel flight = new FlightModel();
+		ArrayList<FlightModel> fList = new ArrayList<FlightModel>();
+		//FlightModel flight = new FlightModel();
 		PilotModel pilot = pilotService.getPilotDetailByLicenseNumber(licenseNumber);
-		flight.setPilot(pilot);
-		
-		model.addAttribute("flight", flight);
+		//flight.setPilot(pilot);
+		fList.add(new FlightModel());
+		System.out.println(pilot.getPilotFlight().size());
+		pilot.setPilotFlight(fList);
+		System.out.println(pilot.getPilotFlight().size());
+		model.addAttribute("pilot", pilot);
 		model.addAttribute("pageName", "Add Flight");
 		return "addFlight";
 	}
 	
-	@RequestMapping(value = "/flight/add", method = RequestMethod.POST)
-	private String addFlightSubmit(@ModelAttribute FlightModel flight, Model model) {
-		flightService.addFlight(flight);
+	@RequestMapping(value = "/flight/add/{licenseNumber}", params = {"save"}, method = RequestMethod.POST)
+	private String addFlightSubmit(@ModelAttribute PilotModel pilot, Model model) {
+		PilotModel addedPilot = pilotService.getPilotDetailByLicenseNumber(pilot.getLicenseNumber());
+		System.out.println(addedPilot.getPilotFlight().size());
+		System.out.println(pilot.getPilotFlight().size());
+		for(FlightModel flight : pilot.getPilotFlight()) {
+			flight.setPilot(addedPilot);
+			flightService.addFlight(flight);
+		}
 		model.addAttribute("pageName", "Add");
 		return "add";
+	}
+	
+	@RequestMapping(value = "/flight/add/{licenseNumber}", params = {"addRow"}, method = RequestMethod.POST)
+	private String addRow(@ModelAttribute PilotModel pilot, Model model) {
+		pilot.getPilotFlight().add(new FlightModel());
+		model.addAttribute("pilot", pilot);
+		model.addAttribute("pageName", "Add Flight");
+		return "addFlight";
 	}
 	
 	@RequestMapping(value = "/flight/delete", method = RequestMethod.POST)
